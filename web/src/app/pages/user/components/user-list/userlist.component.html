@@ -1,0 +1,63 @@
+<!-- Content Header (Page header) -->
+<section class="content-header">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-5 mb-0 pb-0">
+                <h1>User List</h1>
+            </div>
+            <div class="col-7 mb-0 pb-0">
+                <div class="float-sm-right">
+                    <div class="btn-group btn-group-sm ml-2" role="group" aria-label="Basic example">
+                        <button type="button" class="btn btn-primary">
+                            Add <i class="ml-1 fa fa-plus"></i>
+                        </button>
+                        
+                    </div> 
+                    <div class="btn-group btn-group-sm ml-2" role="group" aria-label="Basic example">
+                        <button type="button" class="btn btn-primary">
+                            Reload <i class="ml-1 fa fa-plus"></i>
+                        </button>                    
+                    </div> 
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- /.container-fluid -->
+
+<!-- Main content -->
+<section class="content">
+    <!-- Default box -->
+    <div class="container-fluid">
+        <div class="card">
+            <!-- <div class="card-header">
+                <h1 class="card-title mt-2">User List</h1>
+                <div class="card-tools">
+                    <div class="btn-group ml-2" role="group" aria-label="Basic example">
+                        <button type="button" class="btn btn-primary">
+                            Add <i class="ml-1 fa fa-plus"></i>
+                        </button>
+                        
+                    </div> 
+                    <div class="btn-group ml-2" role="group" aria-label="Basic example">
+                        <button type="button" class="btn btn-primary">
+                            Reload <i class="ml-1 fa fa-plus"></i>
+                        </button>                    
+                    </div> 
+
+                </div>
+            </div> -->
+            <div class="card-body">
+                <ngx-table [configuration]="configuration"
+                    [data]="users"
+                    [columns]="columns">
+                </ngx-table>
+            </div>
+            <!-- /.card-body -->
+            <!-- <div class="card-footer">Footer</div> -->
+            <!-- /.card-footer-->
+        </div>
+    </div>
+    <!-- /.card -->
+</section>
+<!-- /.content -->

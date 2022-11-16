@@ -1,6 +1,7 @@
 # Logs
 logs
 *.log
+*.bak
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
@@ -38,6 +39,7 @@ bower_components
 build/Release
 
 # Dependency directories
+.angular/
 node_modules/
 jspm_packages/
 
