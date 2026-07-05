@@ -1,0 +1,29 @@
+version: v1
+name: your-app-name
+
+stages:
+  planning:
+    require_milestone: true
+    require_issues_assigned: true
+
+  development:
+    branch: main
+    deploy_target: dev
+    required_checks:
+      - "CI — Build & Test"
+
+  testing:
+    branch_pattern: "release/**"
+    required_checks:
+      - "CI — Build & Test"
+
+  evidencing:
+    required_artifacts:
+      - sdlc-evidence
+    required_reviewers:
+      min_approvals: 1
+
+  deployment:
+    target: production
+    promotion: manual
+    requires_evidence_approval: true

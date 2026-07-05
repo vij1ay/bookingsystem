@@ -1,0 +1,105 @@
+name: SDLC Setup (run once)
+
+# This workflow creates branch protection rulesets using YOUR repo's
+# built-in GITHUB_TOKEN — sdlc-state never gets admin access to your repo.
+#
+# ℹ️ Note: On GitHub Free plan, rulesets can be created but won't be enforced
+#    for private repositories until you upgrade to GitHub Team or Pro.
+#    The SDLC enforce workflow checks will still run on every PR.
+#
+# Run it ONCE from the Actions tab after merging the setup PR.
+# You can delete this file afterwards.
+
+on:
+  workflow_dispatch:
+    inputs:
+      setup_pat:
+        description: 'Optional PAT to override GITHUB_TOKEN. Fine-grained PAT: Administration=write. Classic PAT: repo scope.'
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  create-rulesets:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create branch protection rulesets
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ inputs.setup_pat || secrets.SDLC_SETUP_PAT || secrets.GITHUB_TOKEN }}
+          script: |
+            const { owner, repo } = context.repo;
+
+            const devBranch = 'main';
+            const mainApprovals = parseInt('1', 10);
+            const releasePrefix = 'release/';
+            const releaseApprovals = parseInt('1', 10);
+
+            async function upsertRuleset(name, branchPattern, approvals) {
+              // Check if ruleset already exists
+              let existingId = null;
+              try {
+                const { data } = await github.request('GET /repos/{owner}/{repo}/rulesets', { owner, repo });
+                const existing = data.find(r => r.name === name);
+                if (existing) existingId = existing.id;
+              } catch (err) {
+                console.log(`Could not list rulesets: ${err.message}`);
+              }
+
+              const config = {
+                name,
+                target: 'branch',
+                enforcement: 'active',
+                conditions: {
+                  ref_name: {
+                    include: [`refs/heads/${branchPattern}`],
+                    exclude: [],
+                  },
+                },
+                rules: [
+                  {
+                    type: 'pull_request',
+                    parameters: {
+                      required_approving_review_count: approvals,
+                      dismiss_stale_reviews_on_push: true,
+                      require_last_push_approval: false,
+                      require_code_owner_review: false,
+                      required_review_thread_resolution: false,
+                    },
+                  },
+                  {
+                    type: 'required_status_checks',
+                    parameters: {
+                      strict_required_status_checks_policy: false,
+                      required_status_checks: [
+                        { context: 'SDLC Enforce' },
+                        { context: 'CI — Build & Test' },
+                      ],
+                    },
+                  },
+                  { type: 'non_fast_forward' },
+                ],
+              };
+
+              if (existingId) {
+                await github.request('PUT /repos/{owner}/{repo}/rulesets/{ruleset_id}', {
+                  owner, repo, ruleset_id: existingId, ...config,
+                });
+                console.log(`✅ Updated ruleset: ${name}`);
+              } else {
+                await github.request('POST /repos/{owner}/{repo}/rulesets', {
+                  owner, repo, ...config,
+                });
+                console.log(`✅ Created ruleset: ${name}`);
+              }
+            }
+
+            try {
+              await upsertRuleset(`sdlc-${devBranch}-protection`, devBranch, mainApprovals);
+              await upsertRuleset(`sdlc-release-protection`, `${releasePrefix}*`, releaseApprovals);
+              console.log('✅ Rulesets configured. You can delete sdlc-setup.yml from this repo.');
+            } catch (err) {
+              core.setFailed(`Ruleset setup failed (${err.status}): ${err.message}`);
+            }
